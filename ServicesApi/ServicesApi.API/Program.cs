@@ -1,10 +1,14 @@
+using FluentValidation.AspNetCore;
 using ServicesApi.Infrastructure;
 using ServicesApi.Infrastructure.Persistence;
+using ServicesApi.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
+builder.Services.AddFluentValidationAutoValidation();
 
 var app = builder.Build();
 
