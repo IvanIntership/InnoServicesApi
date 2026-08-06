@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS services (
     is_active BOOLEAN NOT NULL DEFAULT TRUE
 );
 
-CREATE INDEX IF NOT EXISTS idx_services_specialization_id
-ON services(specialization_id);
+CREATE INDEX IF NOT EXISTS idx_services_name
+ON services(name);
 
-CREATE INDEX IF NOT EXISTS idx_services_service_category_id
-ON services(service_category_id);
+CREATE INDEX IF NOT EXISTS idx_service_categories_name
+ON service_categories(name);

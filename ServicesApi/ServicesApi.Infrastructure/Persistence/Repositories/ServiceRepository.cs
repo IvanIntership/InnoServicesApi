@@ -16,9 +16,9 @@ public sealed class ServiceRepository : IServiceRepository
     public async Task<Service?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, specialization_id, service_category_id, name, price, is_active 
+                           SELECT * 
                            FROM services 
-                           WHERE id=@Id AND is_deleted = false
+                           WHERE id=@Id AND is_active = true
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
@@ -28,9 +28,9 @@ public sealed class ServiceRepository : IServiceRepository
     public async Task<IEnumerable<Service>> GetByCategoryId(Guid categoryId, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, specialization_id, service_category_id, name, price, is_active 
+                           SELECT * 
                            FROM services 
-                           WHERE service_category_id=@Id AND is_deleted = false
+                           WHERE service_category_id=@Id AND is_active = true
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
@@ -40,33 +40,33 @@ public sealed class ServiceRepository : IServiceRepository
     public async Task<IEnumerable<Service>> GetBySpecializationId(Guid specializationId, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, specialization_id, service_category_id, name, price, is_active 
+                           SELECT *
                            FROM services 
-                           WHERE specialization_id=@Id AND is_deleted = false
+                           WHERE specialization_id=@Id AND is_active = true
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryAsync<Service>(new CommandDefinition(sql, new { Id = specializationId }, cancellationToken: ct));
     }
 
-    public async Task<IEnumerable<Service>> SearchByTerm(string name, CancellationToken ct = default)
+    public async Task<IEnumerable<Service>> SearchByTerm(string term, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, specialization_id, service_category_id, name, price, is_active  
+                           SELECT *  
                            FROM services
-                           WHERE name ILIKE '%' || @Term || '%' AND is_deleted = false;
+                           WHERE name ILIKE '%' || @Term || '%' AND is_active = true;
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<Service>(new CommandDefinition(sql, new { Term = name }, cancellationToken: ct));
+        return await connection.QueryAsync<Service>(new CommandDefinition(sql, new { Term = term }, cancellationToken: ct));
     }
 
     public async Task<IEnumerable<Service>> GetAllAsync(CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, specialization_id, service_category_id, name, price, is_active 
+                           SELECT * 
                            FROM services
-                           WHERE is_deleted = false;
+                           WHERE is_active = true;
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
@@ -82,7 +82,7 @@ public sealed class ServiceRepository : IServiceRepository
                                name = @Name,
                                price = @Price,
                                is_active = @IsActive
-                           WHERE id = @Id AND is_deleted = false;
+                           WHERE id = @Id AND is_active = true;
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
@@ -93,8 +93,8 @@ public sealed class ServiceRepository : IServiceRepository
     {
         const string sql = """
                            UPDATE services
-                           SET is_deleted = true
-                           WHERE id = @Id AND is_deleted = false;
+                           SET is_active = false
+                           WHERE id = @Id;
                            """;
 
         using var connection = _connectionFactory.CreateConnection();
@@ -115,10 +115,9 @@ public sealed class ServiceRepository : IServiceRepository
     public async Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT EXISTS
-                               (SELECT 1 
-                                FROM services 
-                                WHERE id=@Id AND is_deleted = false);
+                           SELECT 1 
+                           FROM services 
+                           WHERE id = @Id AND is_active = true;
                            """;
         using var connection = _connectionFactory.CreateConnection();
         
@@ -128,10 +127,10 @@ public sealed class ServiceRepository : IServiceRepository
     public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT EXISTS
-                               (SELECT 1 
-                                FROM services 
-                                WHERE LOWER(name)=LOWER(@Name) AND is_deleted = false);
+                           SELECT 1 
+                           FROM services 
+                           WHERE LOWER(name) = LOWER(@Name) AND is_active = true 
+                           LIMIT 1;
                            """;
         using var connection = _connectionFactory.CreateConnection();
         

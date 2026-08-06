@@ -16,7 +16,7 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
     public async Task<ServiceCategory?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, name, duration 
+                           SELECT * 
                            FROM service_categories 
                            WHERE id=@Id;
                            """;
@@ -25,22 +25,22 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
         return await connection.QuerySingleOrDefaultAsync<ServiceCategory>(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
     }
 
-    public async Task<IEnumerable<ServiceCategory>> SearchByTerm(string name, CancellationToken ct = default)
+    public async Task<IEnumerable<ServiceCategory>> SearchByTerm(string term, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, name, duration 
+                           SELECT * 
                            FROM service_categories 
                            WHERE name ILIKE '%' || @Term || '%';
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        return await connection.QueryAsync<ServiceCategory>(new CommandDefinition(sql, new { Term = name }, cancellationToken: ct));
+        return await connection.QueryAsync<ServiceCategory>(new CommandDefinition(sql, new { Term = term }, cancellationToken: ct));
     }
 
     public async Task<IEnumerable<ServiceCategory>> GetAllAsync(CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT id, name, duration 
+                           SELECT * 
                            FROM service_categories;
                            """;
         
@@ -86,11 +86,9 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
     public async Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT EXISTS
-                               (SELECT 1 
-                                FROM service_categories 
-                                WHERE id=@Id
-                                );
+                           SELECT 1 
+                           FROM service_categories 
+                           WHERE id = @Id;
                            """;
         using var connection = _connectionFactory.CreateConnection();
         
@@ -100,11 +98,10 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
     public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
     {
         const string sql = """
-                           SELECT EXISTS(
                            SELECT 1 
                            FROM service_categories 
-                           WHERE LOWER(name)=LOWER(@Name)
-                           );
+                           WHERE LOWER(name) = LOWER(@Name) 
+                           LIMIT 1;
                            """;
         using var connection = _connectionFactory.CreateConnection();
         

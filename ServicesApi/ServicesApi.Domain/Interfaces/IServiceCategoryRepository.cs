@@ -5,7 +5,7 @@ namespace ServicesApi.Domain.Interfaces;
 public interface IServiceCategoryRepository
 {
     Task<ServiceCategory?> GetByIdAsync(Guid id, CancellationToken ct = default);
-    Task<IEnumerable<ServiceCategory>> SearchByTerm(string name, CancellationToken сt = default);
+    Task<IEnumerable<ServiceCategory>> SearchByTerm(string term, CancellationToken сt = default);
     Task<IEnumerable<ServiceCategory>> GetAllAsync(CancellationToken ct = default);
     
     Task UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default);
