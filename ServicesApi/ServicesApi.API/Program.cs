@@ -1,7 +1,7 @@
 using FluentValidation.AspNetCore;
+using ServicesApi.Application;
 using ServicesApi.Infrastructure;
 using ServicesApi.Infrastructure.Persistence;
-using ServicesApi.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +12,8 @@ builder.Services.AddFluentValidationAutoValidation();
 
 var app = builder.Build();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string not found");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string not found");
 DatabaseInitializer.Migrate(connectionString);
 
 if (app.Environment.IsDevelopment())
