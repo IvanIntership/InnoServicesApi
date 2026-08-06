@@ -1,6 +1,6 @@
 ﻿namespace ServicesApi.Domain.Entities;
 
-public class Service
+public sealed class Service
 {
     public Guid Id { get; init; } =  Guid.NewGuid();
     public Guid SpecializationId { get; set; }
