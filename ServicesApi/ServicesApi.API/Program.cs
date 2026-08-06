@@ -1,3 +1,4 @@
+using ServicesApi.Application;
 using ServicesApi.Infrastructure;
 using ServicesApi.Infrastructure.Persistence;
 
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
