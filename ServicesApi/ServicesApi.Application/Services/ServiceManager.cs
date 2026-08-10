@@ -95,7 +95,9 @@ public sealed class ServiceManager : IServiceManager
         {
             throw new InvalidOperationException("No such service exists.");
         }
-        return _mapper.Map<ServiceDto>(service);
+        var serviceDto = _mapper.Map<ServiceDto>(service);
+        serviceDto.Doctors = await _profilesApiClient.GetDoctorsBySpecializationAsync(service.SpecializationId, ct);
+        return serviceDto;
     }
 
     public async Task<IEnumerable<ServiceDto>> GetServicesByCategoryIdAsync(Guid categoryId, CancellationToken ct = default)
@@ -120,10 +122,5 @@ public sealed class ServiceManager : IServiceManager
     {
         var services = await _serviceRepository.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ServiceDto>>(services);
-    }
-
-    public async Task<IEnumerable<DoctorDto>> GetDoctorsBySpecializationIdAsync(Guid specializationId, CancellationToken ct = default)
-    {
-        return await _profilesApiClient.GetDoctorsBySpecializationAsync(specializationId, ct);
     }
 }
