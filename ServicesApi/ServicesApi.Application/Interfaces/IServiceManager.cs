@@ -1,4 +1,5 @@
-﻿using ServicesApi.Application.Dto.Services;
+﻿using ServicesApi.Application.Dto.External;
+using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 
 namespace ServicesApi.Application.Interfaces;
@@ -16,4 +17,5 @@ public interface IServiceManager
     Task<IEnumerable<ServiceDto>> GetServicesBySpecializationIdAsync(Guid specializationId, CancellationToken ct = default);
     Task<IEnumerable<ServiceDto>> GetServicesByTermAsync(SearchByTermDto term, CancellationToken ct = default);
     Task<IEnumerable<ServiceDto>> GetAllServicesAsync(CancellationToken ct = default);
+    Task<IEnumerable<DoctorDto>> GetDoctorsBySpecializationIdAsync(Guid specializationId, CancellationToken ct = default);
 }

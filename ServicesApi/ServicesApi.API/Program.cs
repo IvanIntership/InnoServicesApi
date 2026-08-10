@@ -2,7 +2,7 @@ using FluentValidation.AspNetCore;
 using ServicesApi.Application;
 using ServicesApi.Application.Interfaces;
 using ServicesApi.Infrastructure;
-using ServicesApi.Infrastructure.Http;
+using ServicesApi.Infrastructure.Clients;
 using ServicesApi.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using ServicesApi.Application.Dto.External;
 using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 using ServicesApi.Application.Interfaces;
@@ -119,5 +120,10 @@ public sealed class ServiceManager : IServiceManager
     {
         var services = await _serviceRepository.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ServiceDto>>(services);
+    }
+
+    public async Task<IEnumerable<DoctorDto>> GetDoctorsBySpecializationIdAsync(Guid specializationId, CancellationToken ct = default)
+    {
+        return await _profilesApiClient.GetDoctorsBySpecializationAsync(specializationId, ct);
     }
 }
