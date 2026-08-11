@@ -11,6 +11,10 @@ builder.Services.AddOpenApi();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddProblemDetails();
 
 var profilesUrl = builder.Configuration["Services:ProfilesApiUrl"] ?? throw new InvalidOperationException("ProfilesApiUrl is missing in configuration.");
 
@@ -28,8 +32,11 @@ DatabaseInitializer.Migrate(connectionString);
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 app.Run();
