@@ -14,4 +14,6 @@ public interface IServiceCategoryRepository
     
     Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
     Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default);
+    Task<bool> ExistsByNameExceptIdAsync(Guid id, string name, CancellationToken ct = default);
+    Task<bool> HasAssociatedServicesAsync(Guid id, CancellationToken ct = default);
 }

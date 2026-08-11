@@ -107,4 +107,30 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
         
         return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Name = name }, cancellationToken: ct));
     }
+
+    public async Task<bool> ExistsByNameExceptIdAsync(Guid id, string name, CancellationToken ct = default)
+    {
+        const string sql = """
+                           SELECT 1 
+                           FROM service_categories 
+                           WHERE LOWER(name) = LOWER(@Name) AND id <> @Id
+                           LIMIT 1;
+                           """;
+        using var connection = _connectionFactory.CreateConnection();
+        
+        return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Name = name, Id = id }, cancellationToken: ct));
+    }
+
+    public async Task<bool> HasAssociatedServicesAsync(Guid id, CancellationToken ct = default)
+    {
+        const string sql = """
+                           SELECT 1 
+                           FROM services 
+                           WHERE service_category_id = @CategoryId AND is_active = true
+                           LIMIT 1
+                           """;
+        using var connection = _connectionFactory.CreateConnection();
+
+        return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { CategoryId = id }, cancellationToken: ct));
+    }
 }

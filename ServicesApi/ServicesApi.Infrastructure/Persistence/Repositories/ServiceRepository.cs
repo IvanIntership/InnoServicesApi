@@ -136,4 +136,17 @@ public sealed class ServiceRepository : IServiceRepository
         
         return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Name = name }, cancellationToken: ct));
     }
+
+    public async Task<bool> ExistsByNameExceptIdAsync(Guid id, string name, CancellationToken ct = default)
+    {
+        const string sql = """
+                           SELECT 1 
+                           FROM services 
+                           WHERE LOWER(name) = LOWER(@Name) AND is_active = true AND id <> @Id
+                           LIMIT 1;
+                           """;
+        using var connection = _connectionFactory.CreateConnection();
+        
+        return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(sql, new { Name = name, Id = id }, cancellationToken: ct));
+    }
 }

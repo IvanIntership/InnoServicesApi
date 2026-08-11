@@ -1,4 +1,6 @@
-﻿namespace ServicesApi.Application.Dto.Services;
+﻿using ServicesApi.Application.Dto.External;
+
+namespace ServicesApi.Application.Dto.Services;
 
 public sealed record ServiceDto
 {
@@ -7,4 +9,5 @@ public sealed record ServiceDto
     public Guid ServiceCategoryId { get; init; }
     public string Name { get; init; }
     public decimal Price { get; init; }
+    public IEnumerable<DoctorDto> Doctors { get; set; }
 }
