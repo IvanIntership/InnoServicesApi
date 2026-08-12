@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using ServicesApi.Application.Dto.ServiceCategories;
+using ServicesApi.Application.Dto.Services;
 using ServicesApi.Domain.Entities;
 
 namespace ServicesApi.Application.Mappings;
@@ -8,8 +8,8 @@ public sealed class ServiceMappingProfile : Profile
 {
     public ServiceMappingProfile()
     {
-        CreateMap<ServiceCategory, ServiceCategoryDto>();
-        CreateMap<AddServiceCategoryDto, ServiceCategory>();
-        CreateMap<UpdateServiceCategoryDto, ServiceCategory>();
+        CreateMap<Service, ServiceDto>();
+        CreateMap<AddServiceDto, Service>();
+        CreateMap<UpdateServiceDto, Service>();
     }
 }
