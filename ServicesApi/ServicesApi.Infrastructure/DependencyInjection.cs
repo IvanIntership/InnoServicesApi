@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();
         services.Decorate<IServiceCategoryRepository, CachedServiceCategoryRepository>();
         services.Decorate<IServiceRepository, CachedServiceRepository>();
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         
         return services;
     }
