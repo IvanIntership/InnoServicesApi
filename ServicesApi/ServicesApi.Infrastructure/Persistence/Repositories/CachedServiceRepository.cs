@@ -70,39 +70,50 @@ public sealed class CachedServiceRepository : IServiceRepository
         }) ?? Enumerable.Empty<Service>();
     }
 
-    public async Task UpdateAsync(Service service, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(Service service, CancellationToken ct = default)
     {
-        await _inner.UpdateAsync(service, ct);
+        var updated = await _inner.UpdateAsync(service, ct);
         
-        _memoryCache.Remove($"service-{service.Id}");
-        _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
-        _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
-        _memoryCache.Remove("services-all");
+        if(updated)
+        {
+            _memoryCache.Remove($"service-{service.Id}");
+            _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
+            _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
+            _memoryCache.Remove("services-all");
+        }
+        return updated;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         var serviceToDelete = await _inner.GetByIdAsync(id, ct);
         
-        await _inner.DeleteAsync(id, ct);
-        
-        _memoryCache.Remove($"service-{id}");
-        _memoryCache.Remove("services-all");
-
-        if (serviceToDelete is not null)
+        var deleted = await _inner.DeleteAsync(id, ct);
+        if(deleted)
         {
-            _memoryCache.Remove($"services-category-{serviceToDelete.ServiceCategoryId}");
-            _memoryCache.Remove($"services-specialization-{serviceToDelete.SpecializationId}");
+            _memoryCache.Remove($"service-{id}");
+            _memoryCache.Remove("services-all");
+
+            if (serviceToDelete is not null)
+            {
+                _memoryCache.Remove($"services-category-{serviceToDelete.ServiceCategoryId}");
+                _memoryCache.Remove($"services-specialization-{serviceToDelete.SpecializationId}");
+            }
         }
+        return deleted;
     }
 
-    public async Task AddAsync(Service service, CancellationToken ct = default)
+    public async Task<bool> AddAsync(Service service, CancellationToken ct = default)
     {
-        await _inner.AddAsync(service, ct);
+        var added = await _inner.AddAsync(service, ct);
         
-        _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
-        _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
-        _memoryCache.Remove("services-all");
+        if(added)
+        {
+            _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
+            _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
+            _memoryCache.Remove("services-all");
+        }
+        return added;
     }
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default) => _inner.ExistsAsync(id, ct);

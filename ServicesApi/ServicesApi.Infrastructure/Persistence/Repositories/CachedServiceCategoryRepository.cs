@@ -47,24 +47,36 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         }) ?? Enumerable.Empty<ServiceCategory>();
     }
 
-    public async Task UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
-        await _inner.UpdateAsync(serviceCategory, ct);
-        _memoryCache.Remove($"category-{serviceCategory.Id}");
-        _memoryCache.Remove("categories-all");
+        var updated = await _inner.UpdateAsync(serviceCategory, ct);
+        if (updated)
+        {
+            _memoryCache.Remove($"category-{serviceCategory.Id}");
+            _memoryCache.Remove("categories-all");
+        }
+        return updated;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
-        await _inner.DeleteAsync(id, ct);
-        _memoryCache.Remove($"category-{id}");
-        _memoryCache.Remove("categories-all");
+        var deleted = await _inner.DeleteAsync(id, ct);
+        if (deleted)
+        {
+            _memoryCache.Remove($"category-{id}");
+            _memoryCache.Remove("categories-all");
+        }
+        return deleted;
     }
 
-    public async Task AddAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
+    public async Task<bool> AddAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
-        await _inner.AddAsync(serviceCategory, ct);
-        _memoryCache.Remove("categories-all");
+        var added = await _inner.AddAsync(serviceCategory, ct);
+        if(added)
+        {
+            _memoryCache.Remove("categories-all");
+        }
+        return added;
     }
 
     public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default) => _inner.ExistsAsync(id, ct);

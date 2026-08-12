@@ -10,9 +10,9 @@ public interface IServiceRepository
     Task<IEnumerable<Service>> SearchByTerm(string term, CancellationToken ct = default);
     Task<IEnumerable<Service>> GetAllAsync(CancellationToken ct = default);
     
-    Task UpdateAsync(Service service, CancellationToken ct = default);
-    Task DeleteAsync(Guid id, CancellationToken ct = default);
-    Task AddAsync(Service service, CancellationToken ct = default);
+    Task<bool> UpdateAsync(Service service, CancellationToken ct = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<bool> AddAsync(Service service, CancellationToken ct = default);
     
     Task<bool> ExistsAsync(Guid id, CancellationToken ct = default);
     Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default);
