@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using ServicesApi.Domain.Entities;
 using ServicesApi.Domain.Interfaces;
+using ServicesApi.Infrastructure.Persistence.Constants;
 
 namespace ServicesApi.Infrastructure.Persistence.Repositories;
 
@@ -17,7 +18,7 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
     }
     public async Task<ServiceCategory?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        string cacheKey = $"category-{id}";
+        string cacheKey = CacheKeys.CategoryById(id);
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -38,7 +39,7 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
 
     public async Task<IEnumerable<ServiceCategory>> GetAllAsync(CancellationToken ct = default)
     {
-        string cacheKey = "categories-all";
+        string cacheKey = CacheKeys.CategoriesAll;
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -52,8 +53,8 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var updated = await _inner.UpdateAsync(serviceCategory, ct);
         if (updated)
         {
-            _memoryCache.Remove($"category-{serviceCategory.Id}");
-            _memoryCache.Remove("categories-all");
+            _memoryCache.Remove(CacheKeys.CategoryById(serviceCategory.Id));
+            _memoryCache.Remove(CacheKeys.CategoriesAll);
         }
         return updated;
     }
@@ -63,8 +64,8 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var deleted = await _inner.DeleteAsync(id, ct);
         if (deleted)
         {
-            _memoryCache.Remove($"category-{id}");
-            _memoryCache.Remove("categories-all");
+            _memoryCache.Remove(CacheKeys.CategoryById(id));
+            _memoryCache.Remove(CacheKeys.CategoriesAll);
         }
         return deleted;
     }
@@ -74,7 +75,7 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var added = await _inner.AddAsync(serviceCategory, ct);
         if(added)
         {
-            _memoryCache.Remove("categories-all");
+            _memoryCache.Remove(CacheKeys.CategoriesAll);
         }
         return added;
     }

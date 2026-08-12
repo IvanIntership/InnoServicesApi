@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using ServicesApi.Domain.Entities;
 using ServicesApi.Domain.Interfaces;
+using ServicesApi.Infrastructure.Persistence.Constants;
 
 namespace ServicesApi.Infrastructure.Persistence.Repositories;
 
@@ -18,7 +19,7 @@ public sealed class CachedServiceRepository : IServiceRepository
 
     public async Task<Service?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
-        string cacheKey = $"service-{id}";
+        string cacheKey = CacheKeys.ServiceById(id);
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -37,7 +38,7 @@ public sealed class CachedServiceRepository : IServiceRepository
 
     public async Task<IEnumerable<Service>> GetByCategoryId(Guid categoryId, CancellationToken ct = default)
     {
-        string cacheKey = $"services-category-{categoryId}";
+        string cacheKey = CacheKeys.ServicesByCategoryId(categoryId);
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -48,7 +49,7 @@ public sealed class CachedServiceRepository : IServiceRepository
 
     public async Task<IEnumerable<Service>> GetBySpecializationId(Guid specializationId, CancellationToken ct = default)
     {
-        string cacheKey = $"services-specialization-{specializationId}";
+        string cacheKey = CacheKeys.ServicesBySpecializationId(specializationId);
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -61,7 +62,7 @@ public sealed class CachedServiceRepository : IServiceRepository
 
     public async Task<IEnumerable<Service>> GetAllAsync(CancellationToken ct = default)
     {
-        string cacheKey = "services-all";
+        string cacheKey = CacheKeys.ServicesAll;
 
         return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
         {
@@ -76,10 +77,10 @@ public sealed class CachedServiceRepository : IServiceRepository
         
         if(updated)
         {
-            _memoryCache.Remove($"service-{service.Id}");
-            _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
-            _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
-            _memoryCache.Remove("services-all");
+            _memoryCache.Remove(CacheKeys.ServiceById(service.Id));
+            _memoryCache.Remove(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId));
+            _memoryCache.Remove(CacheKeys.ServicesBySpecializationId(service.SpecializationId));
+            _memoryCache.Remove(CacheKeys.ServicesAll);
         }
         return updated;
     }
@@ -91,13 +92,13 @@ public sealed class CachedServiceRepository : IServiceRepository
         var deleted = await _inner.DeleteAsync(id, ct);
         if(deleted)
         {
-            _memoryCache.Remove($"service-{id}");
-            _memoryCache.Remove("services-all");
+            _memoryCache.Remove(CacheKeys.ServiceById(id));
+            _memoryCache.Remove(CacheKeys.ServicesAll);
 
             if (serviceToDelete is not null)
             {
-                _memoryCache.Remove($"services-category-{serviceToDelete.ServiceCategoryId}");
-                _memoryCache.Remove($"services-specialization-{serviceToDelete.SpecializationId}");
+                _memoryCache.Remove(CacheKeys.ServicesByCategoryId(serviceToDelete.ServiceCategoryId));
+                _memoryCache.Remove(CacheKeys.ServicesBySpecializationId(serviceToDelete.SpecializationId));
             }
         }
         return deleted;
@@ -109,9 +110,9 @@ public sealed class CachedServiceRepository : IServiceRepository
         
         if(added)
         {
-            _memoryCache.Remove($"services-category-{service.ServiceCategoryId}");
-            _memoryCache.Remove($"services-specialization-{service.SpecializationId}");
-            _memoryCache.Remove("services-all");
+            _memoryCache.Remove(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId));
+            _memoryCache.Remove(CacheKeys.ServicesBySpecializationId(service.SpecializationId));
+            _memoryCache.Remove(CacheKeys.ServicesAll);
         }
         return added;
     }
