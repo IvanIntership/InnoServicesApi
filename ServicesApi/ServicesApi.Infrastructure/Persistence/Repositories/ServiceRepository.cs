@@ -73,7 +73,7 @@ public sealed class ServiceRepository : IServiceRepository
         return await connection.QueryAsync<Service>(new CommandDefinition(sql, cancellationToken: ct));
     }
 
-    public async Task UpdateAsync(Service service, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(Service service, CancellationToken ct = default)
     {
         const string sql = """
                            UPDATE services
@@ -82,14 +82,23 @@ public sealed class ServiceRepository : IServiceRepository
                                name = @Name,
                                price = @Price,
                                is_active = @IsActive
-                           WHERE id = @Id AND is_active = true;
+                           WHERE 
+                               id = @Id 
+                                AND is_active = true
+                                AND (
+                                   specialization_id IS DISTINCT FROM @SpecializationId 
+                                   OR service_category_id IS DISTINCT FROM @ServiceCategoryId
+                                   OR name IS DISTINCT FROM @Name 
+                                   OR price IS DISTINCT FROM @Price);
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, service, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, service, cancellationToken: ct));
+
+        return rowsAffected > 0;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
                            UPDATE services
@@ -98,10 +107,12 @@ public sealed class ServiceRepository : IServiceRepository
                            """;
 
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+
+        return rowsAffected > 0;
     }
 
-    public async Task AddAsync(Service service, CancellationToken ct = default)
+    public async Task<bool> AddAsync(Service service, CancellationToken ct = default)
     {
         const string sql = """
                            INSERT INTO services (id, specialization_id, service_category_id, name, price, is_active) 
@@ -109,7 +120,9 @@ public sealed class ServiceRepository : IServiceRepository
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, service, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, service, cancellationToken: ct));
+
+        return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)

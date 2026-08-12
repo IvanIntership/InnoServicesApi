@@ -48,19 +48,21 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
         return await connection.QueryAsync<ServiceCategory>(new CommandDefinition(sql, cancellationToken: ct));
     }
 
-    public async Task UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
+    public async Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
         const string sql = """
                            UPDATE service_categories 
                            SET name = @Name, duration = @Duration 
-                           WHERE id = @Id;
+                           WHERE id = @Id
+                           AND name IS DISTINCT FROM @Name OR duration IS DISTINCT FROM @Duration;
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, serviceCategory, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, serviceCategory, cancellationToken: ct));
+        return rowsAffected > 0;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken ct = default)
     {
         const string sql = """
                            DELETE 
@@ -69,10 +71,12 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+
+        return rowsAffected > 0;
     }
 
-    public async Task AddAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
+    public async Task<bool> AddAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
         const string sql = """
                            INSERT INTO service_categories (id, name, duration) 
@@ -80,7 +84,9 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
-        await connection.ExecuteAsync(new CommandDefinition(sql, serviceCategory, cancellationToken: ct));
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, serviceCategory, cancellationToken: ct));
+        
+        return rowsAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken ct = default)

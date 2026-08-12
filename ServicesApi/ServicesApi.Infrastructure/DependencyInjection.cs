@@ -12,8 +12,13 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 
+        services.AddMemoryCache();
+        
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();
+        services.Decorate<IServiceCategoryRepository, CachedServiceCategoryRepository>();
+        services.Decorate<IServiceRepository, CachedServiceRepository>();
+        Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         
         return services;
     }
