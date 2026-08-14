@@ -26,6 +26,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     )]
     [SwaggerResponse(StatusCodes.Status201Created, "Category was created successfully", typeof(ServiceCategoryDto))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid request body or parameters")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, $"A service category with such name already exists.")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> AddServiceCategory([FromBody] AddServiceCategoryDto createServiceCategoryDto, CancellationToken ct = default)
     {
@@ -40,6 +41,8 @@ public sealed class ServiceCategoriesController : ControllerBase
         OperationId = "DeleteServiceCategory"
     )]
     [SwaggerResponse(StatusCodes.Status204NoContent, "Service category was successfully deleted")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category exists")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "The service category with id has associated services")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> DeleteServiceCategory([FromRoute] Guid id, CancellationToken ct = default)
     {
@@ -55,6 +58,8 @@ public sealed class ServiceCategoriesController : ControllerBase
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Service category was successfully edited", typeof(ServiceCategoryDto))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid request body or parameters")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category exists")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "The service category with such name already exists")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> UpdateServiceCategory([FromBody] UpdateServiceCategoryDto updateServiceCategoryDto, CancellationToken ct = default)
     {
@@ -69,6 +74,7 @@ public sealed class ServiceCategoriesController : ControllerBase
         OperationId = "GetServiceCategoryById"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Service category retrieved successfully", typeof(ServiceCategoryDto))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category exists")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> GetServiceCategoryById([FromRoute] Guid serviceCategoryId, CancellationToken ct = default)
     {
