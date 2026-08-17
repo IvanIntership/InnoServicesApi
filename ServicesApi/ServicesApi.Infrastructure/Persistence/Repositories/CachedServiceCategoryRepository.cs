@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using ServicesApi.Application.Interfaces;
 using ServicesApi.Domain.Entities;
 using ServicesApi.Domain.Interfaces;
 using ServicesApi.Infrastructure.Persistence.Constants;
@@ -10,16 +11,18 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
 {
     private readonly IServiceCategoryRepository _inner;
     private readonly IDistributedCache _distributedCache;
+    private readonly IDbSession _dbSession;
     
     private static readonly DistributedCacheEntryOptions CacheOptions = new()
     {
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
     };
 
-    public CachedServiceCategoryRepository(IServiceCategoryRepository inner, IDistributedCache distributedCache)
+    public CachedServiceCategoryRepository(IServiceCategoryRepository inner, IDistributedCache distributedCache, IDbSession dbSession)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+        _dbSession = dbSession;
     }
     
     private async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T?>> factory, CancellationToken ct)
@@ -58,8 +61,11 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var updated = await _inner.UpdateAsync(serviceCategory, ct);
         if (updated)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.CategoryById(serviceCategory.Id), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            _dbSession.RegisterPostCommitAction(async () =>
+            {
+                await _distributedCache.RemoveAsync(CacheKeys.CategoryById(serviceCategory.Id), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            });
         }
         return updated;
     }
@@ -69,8 +75,11 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var deleted = await _inner.DeleteAsync(id, ct);
         if (deleted)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.CategoryById(id), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            _dbSession.RegisterPostCommitAction(async () =>
+            {
+                await _distributedCache.RemoveAsync(CacheKeys.CategoryById(id), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            });
         }
         return deleted;
     }
@@ -80,7 +89,10 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var added = await _inner.AddAsync(serviceCategory, ct);
         if (added)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            _dbSession.RegisterPostCommitAction(async () =>
+            {
+                await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
+            });
         }
         return added;
     }
