@@ -1,4 +1,5 @@
 using FluentValidation.AspNetCore;
+using ServicesApi.API.Middleware;
 using ServicesApi.Application;
 using ServicesApi.Application.Interfaces;
 using ServicesApi.Infrastructure;
@@ -14,6 +15,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 var profilesUrl = builder.Configuration["Services:ProfilesApiUrl"] ?? throw new InvalidOperationException("ProfilesApiUrl is missing in configuration.");
@@ -28,6 +30,8 @@ var app = builder.Build();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string not found");
 DatabaseInitializer.Migrate(connectionString);
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

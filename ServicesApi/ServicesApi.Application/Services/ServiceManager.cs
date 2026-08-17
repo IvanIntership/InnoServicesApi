@@ -4,6 +4,7 @@ using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 using ServicesApi.Application.Interfaces;
 using ServicesApi.Domain.Entities;
+using ServicesApi.Domain.Exceptions;
 using ServicesApi.Domain.Interfaces;
 
 namespace ServicesApi.Application.Services;
@@ -28,19 +29,19 @@ public sealed class ServiceManager : IServiceManager
         bool alreadyExists = await _serviceRepository.ExistsByNameAsync(addService.Name, ct);
         if (alreadyExists)
         {
-            throw new InvalidOperationException($"A service named '{addService.Name}' already exists."); 
+            throw new ConflictException($"A service named '{addService.Name}' already exists."); 
         }
         
         bool categoryExists = await _serviceCategoryRepository.ExistsAsync(addService.ServiceCategoryId, ct);
         if (!categoryExists)
         {
-            throw new InvalidOperationException("No such category exists.");
+            throw new NotFoundException("No such category exists.");
         }
         
         bool specializationExists = await _profilesApiClient.SpecializationExistsAsync(addService.SpecializationId, ct);
         if (!specializationExists)
         {
-            throw new InvalidOperationException("No such specialization exists."); 
+            throw new NotFoundException("No such specialization exists."); 
         }
         
         var service = _mapper.Map<Service>(addService);
@@ -55,7 +56,7 @@ public sealed class ServiceManager : IServiceManager
         var service =  await _serviceRepository.GetByIdAsync(id, ct);
         if (service == null)
         {
-            throw new InvalidOperationException("No such service exists.");
+            throw new NotFoundException("No such service exists.");
         }
         
         await _serviceRepository.DeleteAsync(id, ct);
@@ -66,19 +67,19 @@ public sealed class ServiceManager : IServiceManager
         bool alreadyExists = await _serviceRepository.ExistsByNameExceptIdAsync(updateService.Id, updateService.Name, ct);
         if (alreadyExists)
         {
-            throw new InvalidOperationException($"A service named '{updateService.Name}' already exists."); 
+            throw new ConflictException($"A service named '{updateService.Name}' already exists."); 
         }
         
         bool categoryExists = await _serviceCategoryRepository.ExistsAsync(updateService.ServiceCategoryId, ct);
         if (!categoryExists)
         {
-            throw new InvalidOperationException("No such category exists.");
+            throw new NotFoundException("No such category exists.");
         }
         
         bool specializationExists = await _profilesApiClient.SpecializationExistsAsync(updateService.SpecializationId, ct);
         if (!specializationExists)
         {
-            throw new InvalidOperationException("No such specialization exists."); 
+            throw new NotFoundException("No such specialization exists."); 
         }
         
         var service = _mapper.Map<Service>(updateService);
@@ -93,7 +94,7 @@ public sealed class ServiceManager : IServiceManager
         
         if (service == null)
         {
-            throw new InvalidOperationException("No such service exists.");
+            throw new NotFoundException("No such service exists.");
         }
         var serviceDto = _mapper.Map<ServiceDto>(service);
         serviceDto.Doctors = await _profilesApiClient.GetDoctorsBySpecializationAsync(service.SpecializationId, ct);

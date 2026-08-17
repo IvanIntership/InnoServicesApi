@@ -26,6 +26,8 @@ public sealed class ServicesController : ControllerBase
     )]
     [SwaggerResponse(StatusCodes.Status201Created, "Service was created successfully", typeof(ServiceDto))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid request body or parameters")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category or specialization exists")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "A service with such name already exists.")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> AddService([FromBody] AddServiceDto createServiceDto, CancellationToken ct = default)
     {
@@ -40,6 +42,7 @@ public sealed class ServicesController : ControllerBase
         OperationId = "DeleteService"
     )]
     [SwaggerResponse(StatusCodes.Status204NoContent, "Service was successfully deleted")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category or specialization exists")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> DeleteService([FromRoute] Guid id, CancellationToken ct = default)
     {
@@ -55,6 +58,8 @@ public sealed class ServicesController : ControllerBase
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Service was successfully edited", typeof(ServiceDto))]
     [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid request body or parameters")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category or specialization exists")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "A service with such name already exists.")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> UpdateService([FromBody] UpdateServiceDto updateServiceDto, CancellationToken ct = default)
     {
@@ -69,6 +74,7 @@ public sealed class ServicesController : ControllerBase
         OperationId = "GetServiceById"
     )]
     [SwaggerResponse(StatusCodes.Status200OK, "Service retrieved successfully", typeof(ServiceDto))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "No such service category or specialization exists")]
     [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
     public async Task<IActionResult> GetServiceById([FromRoute] Guid serviceId, CancellationToken ct = default)
     {
