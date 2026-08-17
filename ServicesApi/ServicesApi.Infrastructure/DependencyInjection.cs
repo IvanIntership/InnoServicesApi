@@ -12,7 +12,11 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 
-        services.AddMemoryCache();
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = configuration.GetConnectionString("Redis");
+            options.InstanceName = "ServicesApi_";
+        });
         
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();

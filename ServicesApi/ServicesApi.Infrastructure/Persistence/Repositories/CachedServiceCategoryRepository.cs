@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using ServicesApi.Domain.Entities;
 using ServicesApi.Domain.Interfaces;
 using ServicesApi.Infrastructure.Persistence.Constants;
@@ -8,44 +9,48 @@ namespace ServicesApi.Infrastructure.Persistence.Repositories;
 public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
 {
     private readonly IServiceCategoryRepository _inner;
-    private readonly IMemoryCache _memoryCache;
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(10);
+    private readonly IDistributedCache _distributedCache;
+    
+    private static readonly DistributedCacheEntryOptions CacheOptions = new()
+    {
+        AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+    };
 
-    public CachedServiceCategoryRepository(IServiceCategoryRepository inner, IMemoryCache memoryCache)
+    public CachedServiceCategoryRepository(IServiceCategoryRepository inner, IDistributedCache distributedCache)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-        _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
+        _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
     }
+    
+    private async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T?>> factory, CancellationToken ct)
+    {
+        var cachedJson = await _distributedCache.GetStringAsync(key, ct);
+        if (!string.IsNullOrEmpty(cachedJson))
+        {
+            return JsonSerializer.Deserialize<T>(cachedJson);
+        }
+
+        var result = await factory();
+        if (result is not null)
+        {
+            var json = JsonSerializer.Serialize(result);
+            await _distributedCache.SetStringAsync(key, json, CacheOptions, ct);
+        }
+
+        return result;
+    }
+
     public async Task<ServiceCategory?> GetByIdAsync(Guid id, CancellationToken ct = default)
     {
         string cacheKey = CacheKeys.CategoryById(id);
-
-        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            var category = await _inner.GetByIdAsync(id, ct);
-
-            if (category is null)
-            {
-                entry.SetAbsoluteExpiration(TimeSpan.Zero);
-                return null;
-            }
-
-            entry.SetAbsoluteExpiration(CacheDuration);
-            return category;
-        });
+        return await GetOrCreateAsync(cacheKey, () => _inner.GetByIdAsync(id, ct), ct);
     }
-
-    public Task<IEnumerable<ServiceCategory>> SearchByTerm(string term, CancellationToken ct = default) => _inner.SearchByTerm(term, ct);
 
     public async Task<IEnumerable<ServiceCategory>> GetAllAsync(CancellationToken ct = default)
     {
         string cacheKey = CacheKeys.CategoriesAll;
-
-        return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
-        {
-            entry.SetAbsoluteExpiration(CacheDuration);
-            return await _inner.GetAllAsync(ct);
-        }) ?? Enumerable.Empty<ServiceCategory>();
+        var categories = await GetOrCreateAsync(cacheKey, () => _inner.GetAllAsync(ct), ct);
+        return categories ?? Enumerable.Empty<ServiceCategory>();
     }
 
     public async Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
@@ -53,8 +58,8 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var updated = await _inner.UpdateAsync(serviceCategory, ct);
         if (updated)
         {
-            _memoryCache.Remove(CacheKeys.CategoryById(serviceCategory.Id));
-            _memoryCache.Remove(CacheKeys.CategoriesAll);
+            await _distributedCache.RemoveAsync(CacheKeys.CategoryById(serviceCategory.Id), ct);
+            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
         }
         return updated;
     }
@@ -64,8 +69,8 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         var deleted = await _inner.DeleteAsync(id, ct);
         if (deleted)
         {
-            _memoryCache.Remove(CacheKeys.CategoryById(id));
-            _memoryCache.Remove(CacheKeys.CategoriesAll);
+            await _distributedCache.RemoveAsync(CacheKeys.CategoryById(id), ct);
+            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
         }
         return deleted;
     }
@@ -73,13 +78,14 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
     public async Task<bool> AddAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
         var added = await _inner.AddAsync(serviceCategory, ct);
-        if(added)
+        if (added)
         {
-            _memoryCache.Remove(CacheKeys.CategoriesAll);
+            await _distributedCache.RemoveAsync(CacheKeys.CategoriesAll, ct);
         }
         return added;
     }
-
+    
+    public Task<IEnumerable<ServiceCategory>> SearchByTerm(string term, CancellationToken ct = default) => _inner.SearchByTerm(term, ct);
     public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default) => _inner.ExistsAsync(id, ct);
     public Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default) => _inner.ExistsByNameAsync(name, ct);
     public Task<bool> ExistsByNameExceptIdAsync(Guid id, string name, CancellationToken ct = default) => _inner.ExistsByNameExceptIdAsync(id, name, ct);
