@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ServicesApi.Application.Interfaces;
 using ServicesApi.Domain.Interfaces;
 using ServicesApi.Infrastructure.Persistence;
 using ServicesApi.Infrastructure.Persistence.Repositories;
@@ -18,10 +19,15 @@ public static class DependencyInjection
             options.InstanceName = "ServicesApi_";
         });
         
+        services.AddScoped<DbSession>();
+        services.AddScoped<IDbSession>(sp => sp.GetRequiredService<DbSession>());
+        
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServiceCategoryRepository, ServiceCategoryRepository>();
+        
         services.Decorate<IServiceCategoryRepository, CachedServiceCategoryRepository>();
         services.Decorate<IServiceRepository, CachedServiceRepository>();
+        
         Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         
         return services;

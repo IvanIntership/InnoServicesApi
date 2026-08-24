@@ -1,5 +1,4 @@
 ﻿using AutoMapper;
-using ServicesApi.Application.Dto.External;
 using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 using ServicesApi.Application.Interfaces;
@@ -15,13 +14,20 @@ public sealed class ServiceManager : IServiceManager
     private readonly IMapper _mapper;
     private readonly IServiceRepository _serviceRepository;
     private readonly IServiceCategoryRepository _serviceCategoryRepository;
+    private readonly IDbSession _dbSession;
 
-    public ServiceManager(IProfilesApiClient profilesApiClient, IMapper mapper, IServiceRepository serviceRepository, IServiceCategoryRepository serviceCategoryRepository)
+    public ServiceManager(
+        IProfilesApiClient profilesApiClient, 
+        IMapper mapper, 
+        IServiceRepository serviceRepository, 
+        IServiceCategoryRepository serviceCategoryRepository,
+        IDbSession dbSession)
     {
         _profilesApiClient = profilesApiClient ?? throw new ArgumentNullException(nameof(profilesApiClient));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _serviceRepository = serviceRepository ?? throw new ArgumentNullException(nameof(serviceRepository));
         _serviceCategoryRepository = serviceCategoryRepository ?? throw new ArgumentNullException(nameof(serviceCategoryRepository));
+        _dbSession = dbSession ?? throw new ArgumentNullException(nameof(dbSession));
     }
 
     public async Task<ServiceDto> CreateServiceAsync(AddServiceDto addService, CancellationToken ct = default)
@@ -45,21 +51,41 @@ public sealed class ServiceManager : IServiceManager
         }
         
         var service = _mapper.Map<Service>(addService);
-        await _serviceRepository.AddAsync(service, ct);
+
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceRepository.AddAsync(service, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
         
         return _mapper.Map<ServiceDto>(service);
-        
     }
 
     public async Task DeleteServiceAsync(Guid id, CancellationToken ct = default)
     {
-        var service =  await _serviceRepository.GetByIdAsync(id, ct);
+        var service = await _serviceRepository.GetByIdAsync(id, ct);
         if (service == null)
         {
             throw new NotFoundException("No such service exists.");
         }
         
-        await _serviceRepository.DeleteAsync(id, ct);
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceRepository.DeleteAsync(id, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
     }
 
     public async Task<ServiceDto> UpdateServiceAsync(UpdateServiceDto updateService, CancellationToken ct = default)
@@ -83,7 +109,18 @@ public sealed class ServiceManager : IServiceManager
         }
         
         var service = _mapper.Map<Service>(updateService);
-        await _serviceRepository.UpdateAsync(service, ct);
+
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceRepository.UpdateAsync(service, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
         
         return _mapper.Map<ServiceDto>(service);
     }

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using ServicesApi.Application.Interfaces;
 using ServicesApi.Domain.Entities;
 using ServicesApi.Domain.Interfaces;
 using ServicesApi.Infrastructure.Persistence.Constants;
@@ -10,16 +11,18 @@ public sealed class CachedServiceRepository : IServiceRepository
 {
     private readonly IServiceRepository _inner;
     private readonly IDistributedCache _distributedCache;
+    private readonly IDbSession _dbSession;
     
     private static readonly DistributedCacheEntryOptions CacheOptions = new()
     {
         AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
     };
 
-    public CachedServiceRepository(IServiceRepository inner, IDistributedCache distributedCache)
+    public CachedServiceRepository(IServiceRepository inner, IDistributedCache distributedCache, IDbSession dbSession)
     {
         _inner = inner ?? throw new ArgumentNullException(nameof(inner));
         _distributedCache = distributedCache ?? throw new ArgumentNullException(nameof(distributedCache));
+        _dbSession = dbSession;
     }
 
     private async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T?>> factory, CancellationToken ct)
@@ -85,10 +88,13 @@ public sealed class CachedServiceRepository : IServiceRepository
         
         if (updated)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.ServiceById(service.Id), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(service.SpecializationId), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
+            _dbSession.RegisterPostCommitAction(async () =>
+            {
+                await _distributedCache.RemoveAsync(CacheKeys.ServiceById(service.Id), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(service.SpecializationId), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
+            });
         }
         return updated;
     }
@@ -100,14 +106,17 @@ public sealed class CachedServiceRepository : IServiceRepository
         var deleted = await _inner.DeleteAsync(id, ct);
         if (deleted)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.ServiceById(id), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
-
-            if (serviceToDelete is not null)
+            _dbSession.RegisterPostCommitAction(async () =>
             {
-                await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(serviceToDelete.ServiceCategoryId), ct);
-                await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(serviceToDelete.SpecializationId), ct);
-            }
+                await _distributedCache.RemoveAsync(CacheKeys.ServiceById(id), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
+
+                if (serviceToDelete is not null)
+                {
+                    await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(serviceToDelete.ServiceCategoryId), ct);
+                    await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(serviceToDelete.SpecializationId), ct);
+                }
+            });
         }
         return deleted;
     }
@@ -118,9 +127,12 @@ public sealed class CachedServiceRepository : IServiceRepository
         
         if (added)
         {
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(service.SpecializationId), ct);
-            await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
+            _dbSession.RegisterPostCommitAction(async () =>
+            {
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesByCategoryId(service.ServiceCategoryId), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesBySpecializationId(service.SpecializationId), ct);
+                await _distributedCache.RemoveAsync(CacheKeys.ServicesAll, ct);
+            });
         }
         return added;
     }

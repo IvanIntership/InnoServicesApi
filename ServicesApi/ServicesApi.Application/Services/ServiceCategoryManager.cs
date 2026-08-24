@@ -11,11 +11,16 @@ namespace ServicesApi.Application.Services;
 public sealed class ServiceCategoryManager : IServiceCategoryManager
 {
     private readonly IServiceCategoryRepository _serviceCategoryRepository;
+    private readonly IDbSession _dbSession;
     private readonly IMapper _mapper;
 
-    public ServiceCategoryManager(IServiceCategoryRepository serviceCategoryRepository, IMapper mapper)
+    public ServiceCategoryManager(
+        IServiceCategoryRepository serviceCategoryRepository, 
+        IDbSession dbSession,
+        IMapper mapper)
     {
         _serviceCategoryRepository = serviceCategoryRepository ?? throw new ArgumentNullException(nameof(serviceCategoryRepository));
+        _dbSession = dbSession ?? throw new ArgumentNullException(nameof(dbSession));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
     }
 
@@ -28,14 +33,25 @@ public sealed class ServiceCategoryManager : IServiceCategoryManager
         }
         
         var serviceCategory = _mapper.Map<ServiceCategory>(addServiceCategory);
-        await _serviceCategoryRepository.AddAsync(serviceCategory, ct);
+
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceCategoryRepository.AddAsync(serviceCategory, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
         
         return _mapper.Map<ServiceCategoryDto>(serviceCategory);
     }
 
     public async Task DeleteServiceCategoryAsync(Guid id, CancellationToken ct = default)
     {
-        var serviceCategory =  await _serviceCategoryRepository.GetByIdAsync(id, ct);
+        var serviceCategory = await _serviceCategoryRepository.GetByIdAsync(id, ct);
         if (serviceCategory == null)
         {
             throw new NotFoundException("No such service category exists.");
@@ -46,7 +62,17 @@ public sealed class ServiceCategoryManager : IServiceCategoryManager
             throw new ConflictException("The service category with id has associated services.");
         }
         
-        await _serviceCategoryRepository.DeleteAsync(id, ct);
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceCategoryRepository.DeleteAsync(id, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
     }
 
     public async Task<ServiceCategoryDto> UpdateServiceCategoryAsync(UpdateServiceCategoryDto updateServiceCategory, CancellationToken ct = default)
@@ -64,7 +90,18 @@ public sealed class ServiceCategoryManager : IServiceCategoryManager
         }
         
         var serviceCategory = _mapper.Map<ServiceCategory>(updateServiceCategory);
-        await _serviceCategoryRepository.UpdateAsync(serviceCategory, ct);
+
+        _dbSession.BeginTransaction();
+        try
+        {
+            await _serviceCategoryRepository.UpdateAsync(serviceCategory, ct);
+            await _dbSession.CommitAsync(ct);
+        }
+        catch
+        {
+            _dbSession.Rollback();
+            throw;
+        }
         
         return _mapper.Map<ServiceCategoryDto>(serviceCategory);
     }
