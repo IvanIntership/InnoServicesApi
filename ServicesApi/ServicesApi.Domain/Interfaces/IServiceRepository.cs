@@ -9,6 +9,11 @@ public interface IServiceRepository
     Task<IEnumerable<Service>> GetBySpecializationId(Guid specializationId, CancellationToken ct = default);
     Task<IEnumerable<Service>> SearchByTerm(string term, CancellationToken ct = default);
     Task<IEnumerable<Service>> GetAllAsync(CancellationToken ct = default);
+    Task<(IEnumerable<Service> Items, int TotalCount)> GetPagedAsync(
+        string term,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default);
     
     Task<bool> UpdateAsync(Service service, CancellationToken ct = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);

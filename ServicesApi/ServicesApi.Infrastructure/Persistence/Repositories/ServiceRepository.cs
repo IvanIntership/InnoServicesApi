@@ -73,6 +73,42 @@ public sealed class ServiceRepository : IServiceRepository
         return await connection.QueryAsync<Service>(new CommandDefinition(sql, cancellationToken: ct));
     }
 
+    public async Task<(IEnumerable<Service> Items, int TotalCount)> GetPagedAsync(
+        string? term, 
+        int pageNumber, 
+        int pageSize, 
+        CancellationToken ct = default)
+    {
+        const string sql = """
+                           SELECT COUNT(*) 
+                           FROM services 
+                           WHERE is_active = true 
+                             AND (@Term IS NULL OR @Term = '' OR name ILIKE '%' || @Term || '%');
+
+                           SELECT * 
+                           FROM services 
+                           WHERE is_active = true 
+                             AND (@Term IS NULL OR @Term = '' OR name ILIKE '%' || @Term || '%')
+                           ORDER BY name
+                           LIMIT @PageSize OFFSET @Offset;
+                           """;
+
+        var parameters = new
+        {
+            Term = term?.Trim(),
+            PageSize = pageSize,
+            Offset = (pageNumber - 1) * pageSize
+        };
+
+        using var connection = _connectionFactory.CreateConnection();
+        using var multi = await connection.QueryMultipleAsync(new CommandDefinition(sql, parameters, cancellationToken: ct));
+
+        var totalCount = await multi.ReadFirstAsync<int>();
+        var items = await multi.ReadAsync<Service>();
+
+        return (items, totalCount);
+    }
+
     public async Task<bool> UpdateAsync(Service service, CancellationToken ct = default)
     {
         const string sql = """

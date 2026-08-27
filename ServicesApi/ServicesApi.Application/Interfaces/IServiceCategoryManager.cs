@@ -14,4 +14,5 @@ public interface IServiceCategoryManager
     Task<ServiceCategoryDto> GetServiceCategoryByIdAsync(Guid id, CancellationToken ct = default);
     Task<IEnumerable<ServiceCategoryDto>> GetServiceCategoriesByTermAsync(SearchByTermDto term, CancellationToken ct = default);
     Task<IEnumerable<ServiceCategoryDto>> GetAllServiceCategoriesAsync(CancellationToken ct = default);
+    Task<PagedResult<ServiceCategoryDto>> GetServiceCategoriesPagedAsync(GetPagedServiceCategoriesDto getPagedServiceCategoriesDto, CancellationToken ct = default);
 }

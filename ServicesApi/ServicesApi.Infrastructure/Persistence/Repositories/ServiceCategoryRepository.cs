@@ -48,6 +48,40 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
         return await connection.QueryAsync<ServiceCategory>(new CommandDefinition(sql, cancellationToken: ct));
     }
 
+    public async Task<(IEnumerable<ServiceCategory> Items, int TotalCount)> GetPagedAsync(
+        string? searchTerm,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default)
+    {
+        const string sql = """
+                           SELECT COUNT(*) 
+                           FROM service_categories 
+                           WHERE (@SearchTerm IS NULL OR @SearchTerm = '' OR name ILIKE '%' || @SearchTerm || '%');
+
+                           SELECT * 
+                           FROM service_categories 
+                           WHERE (@SearchTerm IS NULL OR @SearchTerm = '' OR name ILIKE '%' || @SearchTerm || '%')
+                           ORDER BY name
+                           LIMIT @PageSize OFFSET @Offset;
+                           """;
+
+        var parameters = new
+        {
+            SearchTerm = searchTerm?.Trim(),
+            PageSize = pageSize,
+            Offset = (pageNumber - 1) * pageSize
+        };
+
+        using var connection = _connectionFactory.CreateConnection();
+        using var multi = await connection.QueryMultipleAsync(new CommandDefinition(sql, parameters, cancellationToken: ct));
+
+        var totalCount = await multi.ReadFirstAsync<int>();
+        var items = await multi.ReadAsync<ServiceCategory>();
+
+        return (items, totalCount);
+    }
+
     public async Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
         const string sql = """

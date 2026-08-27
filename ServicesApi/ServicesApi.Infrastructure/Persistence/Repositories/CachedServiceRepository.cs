@@ -82,6 +82,8 @@ public sealed class CachedServiceRepository : IServiceRepository
         return services ?? Enumerable.Empty<Service>();
     }
 
+    public async Task<(IEnumerable<Service> Items, int TotalCount)> GetPagedAsync(string term, int pageNumber, int pageSize, CancellationToken ct = default) => await _inner.GetPagedAsync(term, pageNumber, pageSize, ct);
+
     public async Task<bool> UpdateAsync(Service service, CancellationToken ct = default)
     {
         var updated = await _inner.UpdateAsync(service, ct);

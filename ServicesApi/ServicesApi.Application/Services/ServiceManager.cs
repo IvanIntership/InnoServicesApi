@@ -161,4 +161,27 @@ public sealed class ServiceManager : IServiceManager
         var services = await _serviceRepository.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ServiceDto>>(services);
     }
+
+    public async Task<PagedResult<ServiceDto>> GetServicesPagedAsync(
+        GetPagedServicesDto getPagedServicesDto, 
+        CancellationToken ct = default)
+    {
+        var searchTerm = getPagedServicesDto?.Term?.Trim();
+        var pageNumber = getPagedServicesDto?.PageNumber ?? 1;
+        var pageSize = getPagedServicesDto?.PageSize ?? 10;
+
+        var (services, totalCount) = await _serviceRepository.GetPagedAsync(
+            searchTerm, 
+            pageNumber, 
+            pageSize, 
+            ct);
+
+        var dtos = _mapper.Map<IEnumerable<ServiceDto>>(services);
+
+        return new PagedResult<ServiceDto>(
+            items: dtos, 
+            totalCount: totalCount, 
+            pageNumber: pageNumber, 
+            pageSize: pageSize);
+    }
 }

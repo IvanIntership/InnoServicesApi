@@ -128,4 +128,27 @@ public sealed class ServiceCategoryManager : IServiceCategoryManager
         var serviceCategories = await _serviceCategoryRepository.GetAllAsync(ct);
         return _mapper.Map<IEnumerable<ServiceCategoryDto>>(serviceCategories);
     }
+
+    public async Task<PagedResult<ServiceCategoryDto>> GetServiceCategoriesPagedAsync(
+        GetPagedServiceCategoriesDto getPagedServiceCategoriesDto,
+        CancellationToken ct = default)
+    {
+        var searchTerm = getPagedServiceCategoriesDto?.Term?.Trim();
+        var pageNumber = getPagedServiceCategoriesDto?.PageNumber ?? 1;
+        var pageSize = getPagedServiceCategoriesDto?.PageSize ?? 10;
+
+        var (items, totalCount) = await _serviceCategoryRepository.GetPagedAsync(
+            searchTerm, 
+            pageNumber, 
+            pageSize, 
+            ct);
+
+        var dtos = _mapper.Map<IEnumerable<ServiceCategoryDto>>(items);
+
+        return new PagedResult<ServiceCategoryDto>(
+            items: dtos, 
+            totalCount: totalCount, 
+            pageNumber: pageNumber, 
+            pageSize: pageSize);
+    }
 }
