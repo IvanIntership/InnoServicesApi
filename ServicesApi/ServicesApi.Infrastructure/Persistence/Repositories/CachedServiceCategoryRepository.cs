@@ -56,6 +56,8 @@ public sealed class CachedServiceCategoryRepository : IServiceCategoryRepository
         return categories ?? Enumerable.Empty<ServiceCategory>();
     }
 
+    public async Task<(IEnumerable<ServiceCategory> Items, int TotalCount)> GetPagedAsync(string term, int pageNumber, int pageSize, CancellationToken ct = default) => await _inner.GetPagedAsync(term, pageNumber, pageSize, ct);
+
     public async Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default)
     {
         var updated = await _inner.UpdateAsync(serviceCategory, ct);

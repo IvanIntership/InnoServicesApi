@@ -17,4 +17,6 @@ public interface IServiceManager
     Task<IEnumerable<ServiceDto>> GetServicesBySpecializationIdAsync(Guid specializationId, CancellationToken ct = default);
     Task<IEnumerable<ServiceDto>> GetServicesByTermAsync(SearchByTermDto term, CancellationToken ct = default);
     Task<IEnumerable<ServiceDto>> GetAllServicesAsync(CancellationToken ct = default);
+    Task<PagedResult<ServiceDto>> GetServicesPagedAsync(GetPagedServicesDto getPagedServicesDto, CancellationToken ct = default);
+
 }

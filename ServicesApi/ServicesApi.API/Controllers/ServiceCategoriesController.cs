@@ -109,4 +109,20 @@ public sealed class ServiceCategoriesController : ControllerBase
         var serviceCategories = await _serviceCategoryManager.GetServiceCategoriesByTermAsync(termDto, ct);
         return Ok(serviceCategories);
     }
+    
+    [HttpPost("search/paged")]
+    [SwaggerOperation(
+        Summary = "Gets a paged list of service categories",
+        Description = "Retrieves a paginated and filtered list of service categories based on search parameters.",
+        OperationId = "GetServiceCategoriesPaged"
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "Paged list of service categories retrieved successfully", typeof(PagedResult<ServiceCategoryDto>))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid search or filter parameters")]
+    [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
+    public async Task<IActionResult> GetServiceCategoriesPaged(
+        [FromBody] GetPagedServiceCategoriesDto getPagedServiceCategoriesDto, CancellationToken ct = default)
+    {
+        var pagedCategories = await _serviceCategoryManager.GetServiceCategoriesPagedAsync(getPagedServiceCategoriesDto, ct);
+        return Ok(pagedCategories);
+    }
 }

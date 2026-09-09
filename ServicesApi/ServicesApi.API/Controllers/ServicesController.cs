@@ -137,4 +137,20 @@ public sealed class ServicesController : ControllerBase
         var services = await _serviceManager.GetServicesByTermAsync(termDto, ct);
         return Ok(services);
     }
+    
+    [HttpPost("search/paged")]
+    [SwaggerOperation(
+        Summary = "Gets a paged list of services",
+        Description = "Retrieves a paginated and filtered list of services based on search parameters.",
+        OperationId = "GetServicesPaged"
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "Paged list of services retrieved successfully", typeof(PagedResult<ServiceDto>))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid search or filter parameters")]
+    [SwaggerResponse(StatusCodes.Status500InternalServerError, "Internal service error")]
+    public async Task<IActionResult> GetServicesPaged(
+        [FromBody] GetPagedServicesDto getPagedServicesDto, CancellationToken ct = default)
+    {
+        var pagedServices = await _serviceManager.GetServicesPagedAsync(getPagedServicesDto, ct);
+        return Ok(pagedServices);
+    }
 }

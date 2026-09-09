@@ -7,6 +7,12 @@ public interface IServiceCategoryRepository
     Task<ServiceCategory?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task<IEnumerable<ServiceCategory>> SearchByTerm(string term, CancellationToken сt = default);
     Task<IEnumerable<ServiceCategory>> GetAllAsync(CancellationToken ct = default);
+
+    Task<(IEnumerable<ServiceCategory> Items, int TotalCount)> GetPagedAsync(
+        string? term,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct = default);
     
     Task<bool> UpdateAsync(ServiceCategory serviceCategory, CancellationToken ct = default);
     Task<bool> DeleteAsync(Guid id, CancellationToken ct = default);
