@@ -88,7 +88,7 @@ public sealed class ServiceCategoryRepository : IServiceCategoryRepository
                            UPDATE service_categories 
                            SET name = @Name, duration = @Duration 
                            WHERE id = @Id
-                           AND name IS DISTINCT FROM @Name OR duration IS DISTINCT FROM @Duration;
+                           AND (name IS DISTINCT FROM @Name OR duration IS DISTINCT FROM @Duration);
                            """;
         
         using var connection = _connectionFactory.CreateConnection();
