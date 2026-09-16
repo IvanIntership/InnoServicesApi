@@ -8,6 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace ServicesApi.API.Controllers;
 
 [ApiController]
+[Authorize(Roles = "Administrator")]
 [Route("[controller]")]
 [Consumes("application/json")]
 public sealed class ServiceCategoriesController : ControllerBase
@@ -18,9 +19,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     {
         _serviceCategoryManager = serviceCategoryManager ?? throw new ArgumentNullException(nameof(serviceCategoryManager));
     }
-    
     [HttpPost]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Adds a new service category",
         Description = "Registers a new service category with the specified details",
@@ -37,7 +36,6 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Deletes a service category",
         Description = "Permanently removes a service category by its unique identifier.",
@@ -54,7 +52,6 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpPut]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Edits a service category",
         Description = "Edits a service category specified details",
@@ -72,6 +69,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpGet("{serviceCategoryId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a service category by ID",
         Description = "Retrieves detailed information for a specific service category using its unique identifier",
@@ -87,6 +85,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpGet]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets all service categories",
         Description = "Retrieves detailed information all service categories",
@@ -101,6 +100,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpPost("searchByTerm")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets service categories by term",
         Description = "Retrieves detailed information for service categories using search term",
@@ -115,6 +115,7 @@ public sealed class ServiceCategoriesController : ControllerBase
     }
     
     [HttpPost("search/paged")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a paged list of service categories",
         Description = "Retrieves a paginated and filtered list of service categories based on search parameters.",

@@ -8,6 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace ServicesApi.API.Controllers;
 
 [ApiController]
+[Authorize(Roles = "Administrator")]
 [Route("[controller]")]
 [Consumes("application/json")]
 public sealed class ServicesController : ControllerBase
@@ -20,7 +21,6 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Adds a new service",
         Description = "Registers a new service with the specified details",
@@ -38,7 +38,6 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Deletes a service",
         Description = "Permanently removes a service by its unique identifier.",
@@ -54,7 +53,6 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPut]
-    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Edits a service",
         Description = "Edits a service specified details",
@@ -72,6 +70,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("{serviceId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a service by ID",
         Description = "Retrieves detailed information for a specific service using its unique identifier",
@@ -87,6 +86,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("category/{categoryId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by category ID",
         Description = "Retrieves detailed information for a specific services using its category unique identifier",
@@ -101,6 +101,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("specialization/{specializationId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by specialization ID",
         Description = "Retrieves detailed information for specific services using its specialization unique identifier",
@@ -115,6 +116,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets all services",
         Description = "Retrieves detailed information all services",
@@ -129,6 +131,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost("searchByTerm")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by term",
         Description = "Retrieves detailed information for services using search term",
@@ -143,6 +146,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost("search/paged")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a paged list of services",
         Description = "Retrieves a paginated and filtered list of services based on search parameters.",
