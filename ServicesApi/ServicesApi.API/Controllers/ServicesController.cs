@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 using ServicesApi.Application.Interfaces;
@@ -19,6 +20,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost]
+    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Adds a new service",
         Description = "Registers a new service with the specified details",
@@ -36,6 +38,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Deletes a service",
         Description = "Permanently removes a service by its unique identifier.",
@@ -51,6 +54,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPut]
+    [Authorize(Roles = "Administrator")]
     [SwaggerOperation(
         Summary = "Edits a service",
         Description = "Edits a service specified details",
