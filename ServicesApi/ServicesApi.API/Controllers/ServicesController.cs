@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ServicesApi.Application.Dto.Services;
 using ServicesApi.Application.Dto.Shared;
 using ServicesApi.Application.Interfaces;
@@ -7,6 +8,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace ServicesApi.API.Controllers;
 
 [ApiController]
+[Authorize(Roles = "Administrator")]
 [Route("[controller]")]
 [Consumes("application/json")]
 public sealed class ServicesController : ControllerBase
@@ -68,6 +70,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("{serviceId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a service by ID",
         Description = "Retrieves detailed information for a specific service using its unique identifier",
@@ -83,6 +86,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("category/{categoryId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by category ID",
         Description = "Retrieves detailed information for a specific services using its category unique identifier",
@@ -97,6 +101,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet("specialization/{specializationId:guid}")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by specialization ID",
         Description = "Retrieves detailed information for specific services using its specialization unique identifier",
@@ -111,6 +116,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpGet]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets all services",
         Description = "Retrieves detailed information all services",
@@ -125,6 +131,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost("searchByTerm")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets services by term",
         Description = "Retrieves detailed information for services using search term",
@@ -139,6 +146,7 @@ public sealed class ServicesController : ControllerBase
     }
     
     [HttpPost("search/paged")]
+    [AllowAnonymous]
     [SwaggerOperation(
         Summary = "Gets a paged list of services",
         Description = "Retrieves a paginated and filtered list of services based on search parameters.",
